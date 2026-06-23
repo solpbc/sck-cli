@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Developer guide for `sck-cli`, a macOS ScreenCaptureKit video + audio capture CLI. Read it before writing code. (`AGENTS.md` is a symlink to this file.)
 
 ## Project Overview
 
@@ -97,3 +97,14 @@ These must be granted in System Settings > Privacy & Security before the tool ca
 
 - **ffmpeg**: Used only for testing (not required at runtime)
   - Install via Homebrew: `brew install ffmpeg`
+
+## Engineering Principles
+
+sol pbc's coding standards, distilled — inlined because a coding agent working
+in this repo can't read the private org standards.
+
+- **Agent-native by design.** The contract with callers is JSONL on stdout (one line per display, one for audio, one for stop) and all logging on stderr — keep that split clean so a watchdog/agent can parse it. `--help` stays comprehensive; errors suggest the next step.
+- **Fail clearly, with honest state.** A capture that can't start (missing permission, no device) reports the specific reason on stderr and exits non-zero — never a silent success or a zero-byte file presented as a recording. The device-change and auto-restart exit paths already model this; preserve them.
+- **KISS / YAGNI.** This is a focused capture tool. Don't add modes, options, or fallbacks for cases that don't exist yet. No backwards-compatibility shims — update call sites directly.
+- **Privacy is architecture.** Local capture only; no analytics, telemetry, crash reporting, or phone-home. The `--mask` confidential-window path exists to keep sensitive surfaces out of the recording — respect it.
+- **Verify before you claim.** ScreenCaptureKit / AVFoundation / CoreAudio behavior is verified against the live API and real hardware, not recalled — run `make test` after every change.
